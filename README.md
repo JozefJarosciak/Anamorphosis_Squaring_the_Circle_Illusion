@@ -4,7 +4,7 @@ An interactive 3D visualization of the famous "Squaring the Circle" anamorphic s
 
 ![Demo](square-to-circle-effect.mp4)
 
-**Live Demo:** [View on GitHub Pages](https://YOUR_USERNAME.github.io/Anamorphosis_Squaring_the_Circle_Illusion/)
+**Live Demo:** [View on GitHub Pages](https://jozefjarosciak.github.io/Anamorphosis_Squaring_the_Circle_Illusion/)
 
 ## The Illusion
 
