@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squaring the Circle - Anamorphosis Illusion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Light theme */
+        :root {
+            --bg-color: #d8d4d0;
+            --text-color: #1a1a1a;
+            --header-bg: #c8c4c0;
+            --canvas-bg: #f8f8f8;
+            --curve-color: #000000;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --panel-border: rgba(0, 0, 0, 0.2);
+            --button-bg: #2a2a2a;
+            --button-text: #ffffff;
+            --button-hover: #444444;
+            --select-bg: #ffffff;
+            --select-border: #888888;
+        }
+
+        /* Dark theme */
+        [data-theme="dark"] {
+            --bg-color: #08080c;
+            --text-color: #f0f0f5;
+            --header-bg: #101018;
+            --canvas-bg: #1a1a28;
+            --curve-color: #ffffff;
+            --panel-bg: rgba(20, 20, 35, 0.95);
+            --panel-border: rgba(255, 255, 255, 0.15);
+            --button-bg: #f0f0f5;
+            --button-text: #101018;
+            --button-hover: #d0d0d8;
+            --select-bg: #1a1a28;
+            --select-border: #404050;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.active {
+            outline: 2px solid var(--text-color);
+            outline-offset: 2px;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 20px;
+        }
+
+        .theme-toggle label {
+            font-size: 0.85rem;
+        }
+
+        .theme-toggle select {
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            background-color: var(--select-bg);
+            color: var(--text-color);
+            border: 1px solid var(--select-border);
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .theme-toggle select:focus {
+            outline: 2px solid var(--button-bg);
+            outline-offset: 1px;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .canvas-container {
+            width: 80vw;
+            height: 80vh;
+            max-width: 1200px;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .math-panel {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            backdrop-filter: blur(10px);
+            transition: background-color 0.3s, border-color 0.3s;
+            min-width: 200px;
+        }
+
+        .math-panel h3 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        .math-panel .row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .math-panel .label {
+            opacity: 0.6;
+        }
+
+        .math-panel .value {
+            font-weight: 600;
+        }
+
+        .math-panel .value-input {
+            width: 70px;
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            border-radius: 3px;
+            color: var(--text-color);
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 5px;
+            text-align: right;
+        }
+
+        .math-panel .value-input:focus {
+            outline: 1px solid var(--button-bg);
+            background: var(--header-bg);
+        }
+
+        .math-panel .value-input::-webkit-inner-spin-button {
+            opacity: 0.5;
+        }
+
+        .shape-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .instructions {
+                font-size: 0.8rem;
+            }
+
+            .canvas-container {
+                width: 95vw;
+                height: 70vh;
+            }
+
+            .math-panel {
+                font-size: 10px;
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <header>
+        <h1>Squaring the Circle</h1>
+        <p class="instructions">
+            Drag to rotate | Scroll to zoom |
+            Y-axis = Square | Z-axis = Circle
+        </p>
+        <div class="controls">
+            <button id="squareViewBtn">Square View (Y-axis)</button>
+            <button id="circleViewBtn">Circle View (Z-axis)</button>
+            <button id="resetViewBtn">Reset View</button>
+            <div class="theme-toggle">
+                <label for="styleSelect">Style:</label>
+                <select id="styleSelect">
+                    <option value="solid">Solid</option>
+                    <option value="sparkle">Sparkle</option>
+                </select>
+            </div>
+            <div class="theme-toggle">
+                <label for="themeSelect">Theme:</label>
+                <select id="themeSelect">
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <div class="math-panel">
+                <h3>Camera Data</h3>
+                <div class="row">
+                    <span class="label">Azimuth (θ):</span>
+                    <input type="number" class="value-input" id="azimuth" step="1" value="0">°
+                </div>
+                <div class="row">
+                    <span class="label">Elevation (φ):</span>
+                    <input type="number" class="value-input" id="elevation" step="1" value="0">°
+                </div>
+                <div class="row">
+                    <span class="label">Distance:</span>
+                    <input type="number" class="value-input" id="distance" step="0.1" min="1.5" max="50" value="5.2">
+                </div>
+                <div class="row">
+                    <span class="label">Position X:</span>
+                    <input type="number" class="value-input" id="posX" step="0.1" value="0">
+                </div>
+                <div class="row">
+                    <span class="label">Position Y:</span>
+                    <input type="number" class="value-input" id="posY" step="0.1" value="0">
+                </div>
+                <div class="row">
+                    <span class="label">Position Z:</span>
+                    <input type="number" class="value-input" id="posZ" step="0.1" value="0">
+                </div>
+            </div>
+            <div class="shape-indicator">
+                <span id="shapeLabel">Viewing: Transition</span>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; xen.pub
+    </footer>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Scene setup
+        const canvas = document.getElementById('canvas');
+        const container = canvas.parentElement;
+
+        const scene = new THREE.Scene();
+
+        // Camera (orthographic only)
+        const aspect = container.clientWidth / container.clientHeight;
+        const frustumSize = 6;
+        const camera = new THREE.OrthographicCamera(
+            -frustumSize * aspect / 2, frustumSize * aspect / 2,
+            frustumSize / 2, -frustumSize / 2,
+            0.1, 1000
+        );
+        camera.position.set(6, 2, 6);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            antialias: true
+        });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        // Theme handling
+        let currentTheme = 'dark';
+        const themeSelect = document.getElementById('themeSelect');
+
+        function updateSceneColors() {
+            if (currentTheme === 'dark') {
+                scene.background = new THREE.Color(0x1a1a28);
+                if (tubeMesh) tubeMesh.material.color.setHex(0xffffff);
+                if (stringMaterial) stringMaterial.color.setHex(0x888899);
+                if (sparkMaterial) {
+                    sparkMaterial.uniforms.isDarkTheme.value = 1.0;
+                    sparkMaterial.blending = THREE.AdditiveBlending;
+                }
+                if (coreMaterial && coreMaterial.uniforms) {
+                    coreMaterial.uniforms.isDarkTheme.value = 1.0;
+                }
+            } else {
+                scene.background = new THREE.Color(0xf8f8f8);
+                if (tubeMesh) tubeMesh.material.color.setHex(0x000000);
+                if (stringMaterial) stringMaterial.color.setHex(0x444444);
+                if (sparkMaterial) {
+                    sparkMaterial.uniforms.isDarkTheme.value = 0.0;
+                    sparkMaterial.blending = THREE.NormalBlending;
+                }
+                if (coreMaterial && coreMaterial.uniforms) {
+                    coreMaterial.uniforms.isDarkTheme.value = 0.0;
+                }
+            }
+        }
+
+        themeSelect.addEventListener('change', (e) => {
+            currentTheme = e.target.value;
+            document.body.setAttribute('data-theme', currentTheme);
+            updateSceneColors();
+        });
+
+        // Generate the anamorphic curve
+        // This is the intersection of:
+        // - Cylinder along Z axis: x² + y² = 1
+        // - Square prism along Y axis: max(|x|, |z|) = 1
+        //
+        // View from Z axis → see CIRCLE
+        // View from Y axis → see SQUARE
+        function generateSquareCircleCurve(segments = 100) {
+            const points = [];
+            const r = 1;
+
+            // Segment 1: Right vertical edge (x=1, y=0, z varies)
+            // On cylinder: 1² + 0² = 1 ✓
+            // On square: max(1, |z|) = 1 when |z| ≤ 1 ✓
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const z = r - 2 * r * t; // z: 1 → -1
+                points.push(new THREE.Vector3(r, 0, z));
+            }
+
+            // Segment 2: Bottom circular arc (z=-1, circle in x-y plane)
+            // On cylinder: x² + y² = 1 ✓
+            // On square: max(|x|, 1) = 1 ✓
+            for (let i = 1; i <= segments; i++) {
+                const t = i / segments;
+                const theta = t * Math.PI; // 0 → π
+                const x = Math.cos(theta) * r; // x: 1 → -1
+                const y = Math.sin(theta) * r; // y: 0 → 1 → 0
+                points.push(new THREE.Vector3(x, y, -r));
+            }
+
+            // Segment 3: Left vertical edge (x=-1, y=0, z varies)
+            for (let i = 1; i <= segments; i++) {
+                const t = i / segments;
+                const z = -r + 2 * r * t; // z: -1 → 1
+                points.push(new THREE.Vector3(-r, 0, z));
+            }
+
+            // Segment 4: Top circular arc (z=1, circle in x-y plane)
+            for (let i = 1; i <= segments; i++) {
+                const t = i / segments;
+                const theta = Math.PI + t * Math.PI; // π → 2π
+                const x = Math.cos(theta) * r; // x: -1 → 1
+                const y = Math.sin(theta) * r; // y: 0 → -1 → 0
+                points.push(new THREE.Vector3(x, y, r));
+            }
+
+            return points;
+        }
+
+        // Create the curve as a tube for visibility
+        const curvePoints = generateSquareCircleCurve(100);
+        const curve = new THREE.CatmullRomCurve3(curvePoints, true);
+
+        const tubeGeometry = new THREE.TubeGeometry(curve, 400, 0.03, 16, true);
+        const tubeMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,  // White for dark theme default
+            side: THREE.DoubleSide
+        });
+        const tubeMesh = new THREE.Mesh(tubeGeometry, tubeMaterial);
+        scene.add(tubeMesh);
+
+        // Create sparkler effect - particles that fly off in random directions
+        const sparkCount = 5000;
+        const sparks = {
+            positions: new Float32Array(sparkCount * 3),
+            velocities: new Float32Array(sparkCount * 3),
+            lifetimes: new Float32Array(sparkCount),
+            maxLifetimes: new Float32Array(sparkCount),
+            sizes: new Float32Array(sparkCount)
+        };
+
+        // Initialize sparks
+        function resetSpark(i) {
+            // Spawn at random point along curve
+            const t = Math.random();
+            const point = curve.getPoint(t);
+
+            sparks.positions[i * 3] = point.x;
+            sparks.positions[i * 3 + 1] = point.y;
+            sparks.positions[i * 3 + 2] = point.z;
+
+            // Random velocity in all directions (spherical)
+            const speed = 0.25 + Math.random() * 0.75;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+
+            sparks.velocities[i * 3] = Math.sin(phi) * Math.cos(theta) * speed;
+            sparks.velocities[i * 3 + 1] = Math.sin(phi) * Math.sin(theta) * speed;
+            sparks.velocities[i * 3 + 2] = Math.cos(phi) * speed;
+
+            // Random lifetime
+            sparks.maxLifetimes[i] = 0.3 + Math.random() * 0.7;
+            sparks.lifetimes[i] = sparks.maxLifetimes[i];
+
+            // Random size
+            sparks.sizes[i] = 0.0105 + Math.random() * 0.0175;
+        }
+
+        // Initialize all sparks
+        for (let i = 0; i < sparkCount; i++) {
+            resetSpark(i);
+            // Stagger initial lifetimes so they don't all spawn at once
+            sparks.lifetimes[i] = Math.random() * sparks.maxLifetimes[i];
+        }
+
+        const sparkGeometry = new THREE.BufferGeometry();
+        sparkGeometry.setAttribute('position', new THREE.BufferAttribute(sparks.positions, 3));
+        sparkGeometry.setAttribute('size', new THREE.BufferAttribute(sparks.sizes, 1));
+        sparkGeometry.setAttribute('lifetime', new THREE.BufferAttribute(sparks.lifetimes, 1));
+        sparkGeometry.setAttribute('maxLifetime', new THREE.BufferAttribute(sparks.maxLifetimes, 1));
+
+        const sparkMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                pixelRatio: { value: renderer.getPixelRatio() },
+                isDarkTheme: { value: 1.0 }
+            },
+            vertexShader: `
+                attribute float size;
+                attribute float lifetime;
+                attribute float maxLifetime;
+                varying float vLife;
+                uniform float pixelRatio;
+
+                void main() {
+                    vLife = lifetime / maxLifetime;
+
+                    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                    // Size decreases as spark dies
+                    gl_PointSize = size * vLife * 250.0 * pixelRatio;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                varying float vLife;
+                uniform float isDarkTheme;
+
+                void main() {
+                    vec2 coord = gl_PointCoord - vec2(0.5);
+                    float dist = length(coord);
+
+                    // Create spark shape - bright core with sharp rays
+                    float core = exp(-dist * 8.0); // Sharp bright center
+
+                    // Add cross/star rays for spark effect
+                    float rays = 0.0;
+                    float angle = atan(coord.y, coord.x);
+                    rays += pow(abs(cos(angle * 2.0)), 8.0) * exp(-dist * 3.0);
+                    rays += pow(abs(cos(angle * 2.0 + 0.785)), 12.0) * exp(-dist * 4.0) * 0.5;
+
+                    float spark = core + rays * 0.6;
+                    if (spark < 0.05) discard;
+
+                    vec3 color;
+
+                    if (isDarkTheme > 0.5) {
+                        // Dark theme: white hot -> yellow -> orange -> red
+                        vec3 white = vec3(1.0, 1.0, 1.0);
+                        vec3 yellow = vec3(1.0, 0.9, 0.4);
+                        vec3 orange = vec3(1.0, 0.5, 0.1);
+                        vec3 red = vec3(0.8, 0.2, 0.05);
+
+                        if (vLife > 0.7) {
+                            color = mix(yellow, white, (vLife - 0.7) / 0.3);
+                        } else if (vLife > 0.3) {
+                            color = mix(orange, yellow, (vLife - 0.3) / 0.4);
+                        } else {
+                            color = mix(red, orange, vLife / 0.3);
+                        }
+                    } else {
+                        // Light theme: bright orange -> orange -> dark orange
+                        vec3 brightOrange = vec3(1.0, 0.6, 0.0);
+                        vec3 orange = vec3(0.95, 0.4, 0.0);
+                        vec3 darkOrange = vec3(0.8, 0.25, 0.0);
+
+                        if (vLife > 0.5) {
+                            color = mix(orange, brightOrange, (vLife - 0.5) / 0.5);
+                        } else {
+                            color = mix(darkOrange, orange, vLife / 0.5);
+                        }
+                    }
+
+                    // Flicker effect
+                    float flicker = 0.85 + 0.15 * fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+
+                    float alpha = spark * vLife * flicker;
+                    gl_FragColor = vec4(color * spark * flicker * 1.5, alpha);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        const sparkPoints = new THREE.Points(sparkGeometry, sparkMaterial);
+        sparkPoints.visible = false;
+        scene.add(sparkPoints);
+
+        // Also add a glowing core along the curve (the "wire" of the sparkler)
+        const coreGeometry = new THREE.TubeGeometry(curve, 400, 0.035, 12, true);
+        const coreMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0.0 },
+                isDarkTheme: { value: 1.0 }
+            },
+            vertexShader: `
+                varying vec3 vPosition;
+                varying vec3 vNormal;
+                varying vec2 vUv;
+
+                void main() {
+                    vPosition = position;
+                    vNormal = normal;
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform float isDarkTheme;
+                varying vec3 vPosition;
+                varying vec3 vNormal;
+                varying vec2 vUv;
+
+                // Noise functions for ember effect
+                float hash(vec3 p) {
+                    p = fract(p * 0.3183099 + 0.1);
+                    p *= 17.0;
+                    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+                }
+
+                float noise(vec3 p) {
+                    vec3 i = floor(p);
+                    vec3 f = fract(p);
+                    f = f * f * (3.0 - 2.0 * f);
+
+                    return mix(
+                        mix(mix(hash(i), hash(i + vec3(1,0,0)), f.x),
+                            mix(hash(i + vec3(0,1,0)), hash(i + vec3(1,1,0)), f.x), f.y),
+                        mix(mix(hash(i + vec3(0,0,1)), hash(i + vec3(1,0,1)), f.x),
+                            mix(hash(i + vec3(0,1,1)), hash(i + vec3(1,1,1)), f.x), f.y),
+                        f.z
+                    );
+                }
+
+                float fbm(vec3 p) {
+                    float value = 0.0;
+                    float amplitude = 0.5;
+                    for (int i = 0; i < 4; i++) {
+                        value += amplitude * noise(p);
+                        p *= 2.0;
+                        amplitude *= 0.5;
+                    }
+                    return value;
+                }
+
+                void main() {
+                    // Animated noise for burning coal effect
+                    vec3 noisePos = vPosition * 8.0 + vec3(0.0, 0.0, time * 0.5);
+                    float n = fbm(noisePos);
+
+                    // Create hot spots that pulse
+                    float hotSpots = fbm(vPosition * 12.0 + vec3(time * 0.3, time * 0.2, time * 0.4));
+                    hotSpots = pow(hotSpots, 2.0);
+
+                    // Combine for ember intensity
+                    float ember = n * 0.6 + hotSpots * 0.8;
+                    ember = clamp(ember, 0.0, 1.0);
+
+                    // Color gradient: dark coal -> red ember -> orange -> bright yellow
+                    vec3 darkCoal = vec3(0.15, 0.05, 0.02);
+                    vec3 redEmber = vec3(0.6, 0.1, 0.02);
+                    vec3 orangeGlow = vec3(1.0, 0.4, 0.05);
+                    vec3 brightYellow = vec3(1.0, 0.8, 0.3);
+
+                    vec3 color;
+                    if (ember < 0.3) {
+                        color = mix(darkCoal, redEmber, ember / 0.3);
+                    } else if (ember < 0.6) {
+                        color = mix(redEmber, orangeGlow, (ember - 0.3) / 0.3);
+                    } else {
+                        color = mix(orangeGlow, brightYellow, (ember - 0.6) / 0.4);
+                    }
+
+                    // Add some edge glow
+                    float fresnel = 1.0 - abs(dot(normalize(vNormal), vec3(0.0, 0.0, 1.0)));
+                    fresnel = pow(fresnel, 2.0);
+                    color += vec3(0.3, 0.1, 0.0) * fresnel * ember;
+
+                    // Pulsing glow
+                    float pulse = 0.9 + 0.1 * sin(time * 3.0 + vPosition.x * 5.0);
+                    color *= pulse;
+
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `,
+            transparent: false
+        });
+        const coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
+        coreMesh.visible = false;
+        scene.add(coreMesh);
+
+        // Update sparks function
+        function updateSparks(deltaTime) {
+            const gravity = -0.5; // Slight downward pull
+
+            for (let i = 0; i < sparkCount; i++) {
+                // Update lifetime
+                sparks.lifetimes[i] -= deltaTime;
+
+                if (sparks.lifetimes[i] <= 0) {
+                    // Respawn spark
+                    resetSpark(i);
+                } else {
+                    // Update position based on velocity
+                    sparks.positions[i * 3] += sparks.velocities[i * 3] * deltaTime;
+                    sparks.positions[i * 3 + 1] += sparks.velocities[i * 3 + 1] * deltaTime;
+                    sparks.positions[i * 3 + 2] += sparks.velocities[i * 3 + 2] * deltaTime;
+
+                    // Apply gravity to Y velocity
+                    sparks.velocities[i * 3 + 1] += gravity * deltaTime;
+
+                    // Slow down over time (air resistance)
+                    sparks.velocities[i * 3] *= 0.99;
+                    sparks.velocities[i * 3 + 1] *= 0.99;
+                    sparks.velocities[i * 3 + 2] *= 0.99;
+                }
+            }
+
+            // Update geometry
+            sparkGeometry.attributes.position.needsUpdate = true;
+            sparkGeometry.attributes.lifetime.needsUpdate = true;
+        }
+
+        // Style switching
+        const styleSelect = document.getElementById('styleSelect');
+        let useSparkle = false;
+
+        styleSelect.addEventListener('change', (e) => {
+            useSparkle = e.target.value === 'sparkle';
+            tubeMesh.visible = !useSparkle;
+            sparkPoints.visible = useSparkle;
+            coreMesh.visible = useSparkle;
+        });
+
+        // Set initial scene colors (dark theme default)
+        scene.background = new THREE.Color(0x1a1a28);
+
+        // Add strings attaching the shape to the ceiling
+        const ceilingY = 10; // roomHeight - 5
+        const stringMaterial = new THREE.LineBasicMaterial({ color: 0x888899, linewidth: 1 }); // Light for dark theme
+
+        // Attachment points on the shape and their ceiling mounts
+        // Ceiling mounts are offset to negative Z so strings don't block circle view
+        const stringAttachments = [
+            { shape: new THREE.Vector3(1, 0, 1), ceiling: new THREE.Vector3(2, ceilingY, -2) },
+            { shape: new THREE.Vector3(-1, 0, 1), ceiling: new THREE.Vector3(-2, ceilingY, -2) },
+            { shape: new THREE.Vector3(1, 0, -1), ceiling: new THREE.Vector3(2, ceilingY, -4) },
+            { shape: new THREE.Vector3(-1, 0, -1), ceiling: new THREE.Vector3(-2, ceilingY, -4) },
+        ];
+
+        // Create strings from each attachment point to ceiling
+        stringAttachments.forEach(({ shape, ceiling }) => {
+            const stringGeometry = new THREE.BufferGeometry().setFromPoints([shape, ceiling]);
+            const string = new THREE.Line(stringGeometry, stringMaterial);
+            scene.add(string);
+        });
+
+        // Room size reference (for string positioning)
+        const roomSize = 40;
+        const roomHeight = 15;
+
+        // Add XYZ axes helper at origin
+        const axesHelper = new THREE.AxesHelper(3);
+        axesHelper.position.set(0, 0, 0);
+        scene.add(axesHelper);
+
+        // Add axis labels using sprites
+        function createAxisLabel(text, position, color) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 64;
+            canvas.height = 64;
+            ctx.fillStyle = color;
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 32, 32);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture });
+            const sprite = new THREE.Sprite(material);
+            sprite.position.copy(position);
+            sprite.scale.set(0.4, 0.4, 0.4);
+            return sprite;
+        }
+
+        const xLabel = createAxisLabel('X', new THREE.Vector3(3.5, 0, 0), '#ff0000');
+        const yLabel = createAxisLabel('Y', new THREE.Vector3(0, 3.5, 0), '#00ff00');
+        const zLabel = createAxisLabel('Z', new THREE.Vector3(0, 0, 3.5), '#0000ff');
+        scene.add(xLabel, yLabel, zLabel);
+
+        // Orbit Controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enablePan = false;
+        controls.enableZoom = false; // Disable default zoom, use custom
+
+        // Orthographic zoom settings
+        let orthoZoom = 1;
+        const minOrthoZoom = 0.3;
+        const maxOrthoZoom = 3;
+        const orthoZoomStep = 0.05;
+
+        function updateCameraFrustum() {
+            const aspect = container.clientWidth / container.clientHeight;
+            const size = frustumSize / orthoZoom;
+            camera.left = -size * aspect / 2;
+            camera.right = size * aspect / 2;
+            camera.top = size / 2;
+            camera.bottom = -size / 2;
+            camera.updateProjectionMatrix();
+        }
+
+        function handleWheel(e) {
+            e.preventDefault();
+
+            // Normalize scroll delta
+            const delta = Math.sign(e.deltaY);
+
+            if (delta > 0) {
+                // Scroll down = zoom out
+                orthoZoom = Math.max(orthoZoom - orthoZoomStep, minOrthoZoom);
+            } else {
+                // Scroll up = zoom in
+                orthoZoom = Math.min(orthoZoom + orthoZoomStep, maxOrthoZoom);
+            }
+            updateCameraFrustum();
+        }
+
+        canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+        // UI Elements
+        const azimuthEl = document.getElementById('azimuth');
+        const elevationEl = document.getElementById('elevation');
+        const distanceEl = document.getElementById('distance');
+        const posXEl = document.getElementById('posX');
+        const posYEl = document.getElementById('posY');
+        const posZEl = document.getElementById('posZ');
+        const shapeLabelEl = document.getElementById('shapeLabel');
+
+        // Track which input is being edited
+        let activeInput = null;
+
+        // Mark input as active when focused
+        [azimuthEl, elevationEl, distanceEl, posXEl, posYEl, posZEl].forEach(el => {
+            el.addEventListener('focus', () => activeInput = el);
+            el.addEventListener('blur', () => activeInput = null);
+        });
+
+        // Handle manual input changes for spherical coordinates (azimuth, elevation, distance)
+        function updateCameraFromSpherical() {
+            const azimuth = THREE.MathUtils.degToRad(parseFloat(azimuthEl.value) || 0);
+            const elevation = THREE.MathUtils.degToRad(parseFloat(elevationEl.value) || 0);
+            const distance = parseFloat(distanceEl.value) || 5;
+
+            // Convert spherical to cartesian
+            // x = d * cos(elev) * sin(azim)
+            // y = d * cos(elev) * cos(azim)
+            // z = d * sin(elev)
+            camera.position.set(
+                distance * Math.cos(elevation) * Math.sin(azimuth),
+                distance * Math.cos(elevation) * Math.cos(azimuth),
+                distance * Math.sin(elevation)
+            );
+            camera.lookAt(0, 0, 0);
+        }
+
+        // Handle manual input changes for cartesian coordinates (X, Y, Z)
+        function updateCameraFromCartesian() {
+            const x = parseFloat(posXEl.value) || 0;
+            const y = parseFloat(posYEl.value) || 0;
+            const z = parseFloat(posZEl.value) || 0;
+
+            camera.position.set(x, y, z);
+            camera.lookAt(0, 0, 0);
+        }
+
+        // Add input listeners for real-time camera updates as you type
+        azimuthEl.addEventListener('input', updateCameraFromSpherical);
+        elevationEl.addEventListener('input', updateCameraFromSpherical);
+        distanceEl.addEventListener('input', updateCameraFromSpherical);
+
+        posXEl.addEventListener('input', updateCameraFromCartesian);
+        posYEl.addEventListener('input', updateCameraFromCartesian);
+        posZEl.addEventListener('input', updateCameraFromCartesian);
+
+        const squareViewBtn = document.getElementById('squareViewBtn');
+        const circleViewBtn = document.getElementById('circleViewBtn');
+        const resetViewBtn = document.getElementById('resetViewBtn');
+
+        // Animation state
+        let isAnimating = false;
+        let animationStart = null;
+        let startPosition = new THREE.Vector3();
+        let targetPosition = new THREE.Vector3();
+        const animationDuration = 1500; // 1.5 seconds
+
+        function animateCameraToPosition(target) {
+            if (isAnimating) return;
+
+            targetPosition.copy(target);
+            startPosition.copy(camera.position);
+            animationStart = performance.now();
+            isAnimating = true;
+        }
+
+        function easeInOutCubic(t) {
+            return t < 0.5
+                ? 4 * t * t * t
+                : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        function updateAnimation(currentTime) {
+            if (!isAnimating) return;
+
+            const elapsed = currentTime - animationStart;
+            let t = Math.min(elapsed / animationDuration, 1);
+            t = easeInOutCubic(t);
+
+            camera.position.lerpVectors(startPosition, targetPosition, t);
+            camera.lookAt(0, 0, 0);
+
+            if (t >= 1) {
+                isAnimating = false;
+            }
+        }
+
+        // Button handlers
+        const viewDistance = 10;
+
+        squareViewBtn.addEventListener('click', () => {
+            // Square view: looking down Y axis (camera on positive Y)
+            animateCameraToPosition(new THREE.Vector3(0, viewDistance, 0));
+        });
+
+        circleViewBtn.addEventListener('click', () => {
+            // Circle view: looking down Z axis (camera on positive Z)
+            animateCameraToPosition(new THREE.Vector3(0, 0, viewDistance));
+        });
+
+        resetViewBtn.addEventListener('click', () => {
+            // Angled view from corner of room
+            animateCameraToPosition(new THREE.Vector3(6, 2, 6));
+        });
+
+        // Calculate camera angles
+        function calculateCameraAngles() {
+            const pos = camera.position;
+            const distance = pos.length();
+
+            // Spherical coordinates
+            // Azimuth: angle in X-Y plane from Y axis
+            let azimuth = Math.atan2(pos.x, pos.y);
+            azimuth = THREE.MathUtils.radToDeg(azimuth);
+            if (azimuth < 0) azimuth += 360;
+
+            // Elevation: angle from X-Y plane (towards Z)
+            const elevation = Math.atan2(pos.z, Math.sqrt(pos.x * pos.x + pos.y * pos.y));
+            const elevationDeg = THREE.MathUtils.radToDeg(elevation);
+
+            return { azimuth, elevation: elevationDeg, distance };
+        }
+
+        function determineShape() {
+            const pos = camera.position;
+            const distance = pos.length();
+            const threshold = 0.15; // How close to axis (as fraction of distance)
+
+            // Normalize position to unit vector
+            const nx = Math.abs(pos.x) / distance;
+            const ny = Math.abs(pos.y) / distance;
+            const nz = Math.abs(pos.z) / distance;
+
+            // Check if viewing along Y axis → SQUARE
+            // Camera mainly on Y axis means ny is large, nx and nz are small
+            if (ny > 0.9 && nx < threshold && nz < threshold) {
+                return 'Square';
+            }
+
+            // Check if viewing along Z axis → CIRCLE
+            // Camera mainly on Z axis means nz is large, nx and ny are small
+            if (nz > 0.9 && nx < threshold && ny < threshold) {
+                return 'Circle';
+            }
+
+            return 'Transition';
+        }
+
+        function updateMathPanel() {
+            const { azimuth, elevation, distance } = calculateCameraAngles();
+            const pos = camera.position;
+
+            // Only update inputs that aren't being edited
+            if (activeInput !== azimuthEl) azimuthEl.value = azimuth.toFixed(1);
+            if (activeInput !== elevationEl) elevationEl.value = elevation.toFixed(1);
+            if (activeInput !== distanceEl) distanceEl.value = distance.toFixed(2);
+            if (activeInput !== posXEl) posXEl.value = pos.x.toFixed(2);
+            if (activeInput !== posYEl) posYEl.value = pos.y.toFixed(2);
+            if (activeInput !== posZEl) posZEl.value = pos.z.toFixed(2);
+
+            const shape = determineShape();
+            shapeLabelEl.textContent = 'Viewing: ' + shape;
+        }
+
+        // Handle resize
+        function onResize() {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            updateCameraFrustum();
+            renderer.setSize(width, height);
+        }
+
+        window.addEventListener('resize', onResize);
+
+        // Animation loop
+        let lastTime = 0;
+
+        function animate(currentTime) {
+            requestAnimationFrame(animate);
+
+            // Calculate delta time in seconds
+            const deltaTime = (currentTime - lastTime) / 1000;
+            lastTime = currentTime;
+
+            updateAnimation(currentTime);
+            controls.update();
+            updateMathPanel();
+
+            // Update sparkler particles and burning coal effect
+            if (sparkPoints.visible && deltaTime > 0 && deltaTime < 0.1) {
+                updateSparks(deltaTime);
+            }
+            if (coreMesh.visible) {
+                coreMaterial.uniforms.time.value = currentTime * 0.001;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // Start with a nice angled view from corner of room
+        camera.position.set(6, 2, 6);
+        camera.lookAt(0, 0, 0);
+
+        lastTime = performance.now();
+        animate(performance.now());
+    </script>
+</body>
+</html>
