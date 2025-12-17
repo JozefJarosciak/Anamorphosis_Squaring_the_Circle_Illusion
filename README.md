@@ -2,8 +2,6 @@
 
 An interactive 3D visualization of the famous "Squaring the Circle" anamorphic sculpture, where a single continuous curve appears as a **perfect square** from one viewing angle and a **perfect circle** from 90 degrees away.
 
-![Demo](square-to-circle-effect.mp4)
-
 **Live Demo:** [View on GitHub Pages](https://jozefjarosciak.github.io/Anamorphosis_Squaring_the_Circle_Illusion/)
 
 ## The Illusion
